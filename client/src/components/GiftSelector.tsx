@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { Gift, createInitialGifts } from '../mocks/GiftList';
@@ -6,38 +6,54 @@ import HappyEmoji from '@/components/HappyEmoji';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LightbulbIcon } from 'lucide-react';
 
+const USER_ID = window.localStorage.getItem('USER_ID') || window.localStorage.setItem('USER_ID', crypto.randomUUID());
 const MAX_SELECTION = 3;
 
 export default function GiftSelector() {
-  const [gifts, setGifts] = useState<Gift[]>(createInitialGifts());
+  const [gifts, setGifts] = useState<Gift[]>(createInitialGifts);
   const [selectedGifts, setSelectedGifts] = useState<Gift[]>([]);
-  const [isMaxLimitDialogOpen, setIsMaxLimitDialogOpen] = useState(false);
+  const [isMaxGiftsDialogOpen, setIsMaxGiftsDialogOpen] = useState(false);
+
+  // Cargar regalos y selección guardada desde localStorage
+  useEffect(() => {
+    const savedSelections = JSON.parse(window.localStorage.getItem(`selected_gifts`) || '[]');
+    setSelectedGifts(savedSelections);
+    setGifts(prevGifts => prevGifts.map(gift => ({
+      ...gift,
+      selected: savedSelections.some((sg: Gift) => sg.id === gift.id),
+    })));
+  }, []);
+
+  // Actualizar regalos cuando cambia la selección
+  useEffect(() => {
+    setGifts(prevGifts => prevGifts.map(gift => ({
+      ...gift,
+      selected: selectedGifts.some((sg: Gift) => sg.id === gift.id),
+    })));
+  }, [selectedGifts]);
 
   const handleGiftSelection = (gift: Gift) => {
     if (selectedGifts.length >= MAX_SELECTION && !gift.selected) {
-      setIsMaxLimitDialogOpen(true);
+      setIsMaxGiftsDialogOpen(true);
       return;
     }
 
-    const updatedGifts = gifts.map((g) => {
-      if (g.id === gift.id) {
-        const isSelected = !g.selected;
-        if (isSelected && selectedGifts.length < MAX_SELECTION) {
-          setSelectedGifts([...selectedGifts, { ...g, selected: true }]);
-        } else if (!isSelected) {
-          setSelectedGifts(selectedGifts.filter((sg) => sg.id !== gift.id));
-        }
-        return { ...g, selected: isSelected };
-      }
-      return g;
-    });
+    const updatedSelectedGifts = gift.selected
+      ? selectedGifts.filter((sg) => sg.id !== gift.id)
+      : [...selectedGifts, { ...gift, selected: true }];
 
-    setGifts(updatedGifts);
+    setSelectedGifts(updatedSelectedGifts);
+  };
+
+  // Guardar selección en localStorage
+  const handleConfirm = () => {
+    window.localStorage.setItem(`selected_gifts`, JSON.stringify(selectedGifts));
   };
 
   const handleReset = () => {
     setSelectedGifts([]);
     setGifts(gifts.map(g => ({ ...g, selected: false })));
+    window.localStorage.removeItem(`selected_gifts`);
   };
 
   return (
@@ -90,6 +106,7 @@ export default function GiftSelector() {
             <Button 
               className="w-full lg:w-auto text-white bg-blue-500 py-7 px-10 hover:bg-blue-600 active:bg-blue-800 disabled:opacity-100 disabled:grayscale" 
               disabled={!selectedGifts.length}
+              onClick={handleConfirm}
             >
               Confirmar ({selectedGifts.length})
             </Button>
@@ -105,20 +122,20 @@ export default function GiftSelector() {
         </div>
 
         {/* Alert Dialog */}
-        <AlertDialog open={isMaxLimitDialogOpen}>
+        <AlertDialog open={isMaxGiftsDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Límite de regalos alcanzado</AlertDialogTitle>
-              <AlertDialogDescription>
-                <p className='mb-3'>Solo deberías seleccionar un máximo de 3 regalos por invitado. No te preocupes, ¡es más que suficiente! <HappyEmoji size={16} /></p> 
+              <AlertDialogDescription className='mb-3'>
+                Solo deberías seleccionar un máximo de 3 regalos por invitado. No te preocupes, ¡es más que suficiente! <HappyEmoji size={16} />
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className='text-xs text-muted-foreground items-center lg:!justify-between gap-y-5 text-center lg:text-left'>
-              <p>
+              <div>
                 <LightbulbIcon className='inline-block -mt-1' size={14} /> TIP:
                 <span className='font-normal ml-1'>Puedes hacer clic en el regalo para deseleccionar.</span>
-              </p>
-              <AlertDialogAction onClick={() => setIsMaxLimitDialogOpen(false)}>¡Listo!</AlertDialogAction>
+              </div>
+              <AlertDialogAction onClick={() => setIsMaxGiftsDialogOpen(false)}>¡Listo!</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
