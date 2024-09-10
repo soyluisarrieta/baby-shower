@@ -1,118 +1,56 @@
-import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
-import axios from '@/lib/axiosConfig';
-import { Gift } from '../mocks/GiftList';
 import HappyEmoji from '@/components/HappyEmoji';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LightbulbIcon } from 'lucide-react';
+import { useGifts } from '@/hooks/useGifts';
+import { Gift } from "@/mocks/GiftList";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
-const MAX_SELECTION = 3;
+const GiftSelector = () => {
+  const [showGiftLimitDialog, setShowGiftLimitDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  
+  const {
+    gifts,
+    selectedGifts,
+    loading,
+    error,
+    isUserConfirmed,
+    userTimestamp,
+    handleGiftSelection,
+    handleConfirm,
+    handleReset
+  } = useGifts();
 
-export default function GiftSelector() {
-  const [gifts, setGifts] = useState<Gift[]>([]);
-  const [selectedGifts, setSelectedGifts] = useState<Gift[]>([]);
-  const [isMaxGiftsDialogOpen, setIsMaxGiftsDialogOpen] = useState(false);
-  const [wasErrorDialogOpen, setWasErrorDialogOpen] = useState(false);
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const [isUserConfirmed, setIsUserConfirmed] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userIp, setUserIp] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUserIp = async () => {
-      try {
-        const response = await axios.get('https://api.ipify.org?format=json');
-        setUserIp(response.data.ip);
-      } catch (err) {
-        console.error('No se pudo obtener la IP del usuario', err);
-        setUserIp(null);
-      }
-    };
-
-    fetchUserIp();
-  }, []);
-
-  useEffect(() => {
-    if (!userIp) return;
-    
-    const fetchGifts = async () => {
-      try {
-        const response = await axios.post('/gifts', {userIp});
-        const { data: {gifts: giftsFromApi, user_exists} } = response.data;
-
-        if (!user_exists) { setIsUserConfirmed(false)  }
-
-        const savedSelections = JSON.parse(window.localStorage.getItem(`selected_gifts`) || '[]');
-
-        const updatedGifts = giftsFromApi.map((gift: Gift) => {
-          const isSelected = savedSelections.some((sg: Gift) => sg.id === gift.id);
-          return { ...gift, selected: isSelected };
-        });
-
-        setGifts(updatedGifts);
-        setSelectedGifts(savedSelections);
-      } catch (err) {
-        setError('No se pudieron recuperar los regalos');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGifts();
-  }, [userIp]);
-
-  // Selección de regalos
-  const handleGiftSelection = (gift: Gift) => {
-    if (gift.reserved) { return; }
-
-    if (selectedGifts.length >= MAX_SELECTION && !gift.selected) {
-      setIsMaxGiftsDialogOpen(true);
-      return;
-    }
-
-    const updatedSelectedGifts = gift.selected
-      ? selectedGifts.filter((sg) => sg.id !== gift.id)
-      : [...selectedGifts, { ...gift, selected: true }];
-
-    setSelectedGifts(updatedSelectedGifts);
-    setGifts(gifts.map(g => g.id === gift.id ? { ...g, selected: !g.selected } : g));
-  };
-
-  // Guardar selección en localStorage
-  const handleConfirm = async () => {
-    window.localStorage.setItem(`selected_gifts`, JSON.stringify(selectedGifts));
-    if (!userIp) return;
-    
-    try {
-      await axios.post('/confirm-gifts', { userIp, gifts: selectedGifts });
-      setIsSuccessDialogOpen(true);
-      setIsUserConfirmed(true)
-    } catch (err) {
-      setError('No se pudieron confirmar los regalos');
-      console.error(err);
+  const handleGiftClick = (gift: Gift) => {
+    const isGiftSelected = handleGiftSelection(gift);
+    if (isGiftSelected === false) {
+      setShowGiftLimitDialog(true);
     }
   };
 
-  // Reiniciar selección
-  const handleReset = () => {
-    setSelectedGifts([]);
-    setGifts(gifts.map(g => ({ ...g, selected: false })));
-    window.localStorage.removeItem(`selected_gifts`);
+  const handleConfirmClick = async () => {
+    const isSuccess = await handleConfirm();
+    if (isSuccess) {
+      setShowSuccessDialog(true);
+    } else {
+      setShowErrorDialog(true);
+    }
   };
 
   return (
     <main className='bg-orange-50/30'>
       {/* Header */}
       <div className='container mx-auto grid grid-cols-2 lg:grid-cols-4 [&_img]:max-h-32 [&_img]:object-top [&_img]:object-contain'>
-        <div className='px-6 grid grid-cols-3 gap-6'>
+        <div className='px-6 grid grid-cols-3 gap-6 pointer-events-none select-none'>
           <img src='./images/baby-decoration1.png' alt='Decoración 1' />
           <img src='./images/baby-decoration2.png' alt='Decoración 2' />
           <img src='./images/baby-decoration3.png' alt='Decoración 3' />
         </div>
-        <div className='lg:order-2 px-6 grid grid-cols-3 gap-6'>
+        <div className='lg:order-2 px-6 grid grid-cols-3 gap-6 pointer-events-none select-none'>
           <img src='./images/baby-decoration4.png' alt='Decoración 4' />
           <img src='./images/baby-decoration5.png' alt='Decoración 5' />
           <img src='./images/baby-decoration6.png' alt='Decoración 6' />
@@ -122,8 +60,12 @@ export default function GiftSelector() {
             { isUserConfirmed ? 'Ya has confirmado tus regalos' : 'Selecciona hasta 3 regalos' }
           </h1>
           <p className='max-w-xl mx-auto mb-6 text-center'>
-            Para evitar que haya regalos repetidos entre los invitados, hemos creado esta aplicación que les permitirá elegir el obsequio
-            <HappyEmoji className='ml-1' size={16} />
+            {!userTimestamp && (
+              <>
+                Para evitar que haya regalos repetidos entre los invitados, hemos creado esta aplicación que les permitirá elegir el obsequio
+                <HappyEmoji className='ml-1' size={16} />
+              </>
+            )}
           </p>
           <p className='max-w-xl mx-auto mb-3 text-center text-sm'>
             ¡Esto NO es un requisito; <span className='font-semibold'>ya eres nuestro invitado/a</span> para acompañarnos al Baby Shower!
@@ -144,7 +86,7 @@ export default function GiftSelector() {
                 'bg-white text-gray-700 border-border hover:bg-green-100 hover:border-green-500 hover:text-green-500'
               )}
               variant='outline'
-              onClick={() => !isUserConfirmed && handleGiftSelection(gift)}
+              onClick={() => !isUserConfirmed && handleGiftClick(gift)}
               disabled={gift.reserved}
             >
               {gift.name}
@@ -159,7 +101,7 @@ export default function GiftSelector() {
               <Button 
                 className="w-full lg:w-auto text-white bg-blue-500 py-7 px-10 hover:bg-blue-600 active:bg-blue-800 disabled:opacity-100 disabled:grayscale" 
                 disabled={!selectedGifts.length}
-                onClick={handleConfirm}
+                onClick={handleConfirmClick}
               >
                 Confirmar ({selectedGifts.length})
               </Button>
@@ -176,13 +118,14 @@ export default function GiftSelector() {
         )}
         
         { isUserConfirmed && (
-          <p className='text-center text-sm p-6'>
+          <div className='text-center text-sm p-6'>
+            <Badge className="mb-2">Fecha confirmada: {userTimestamp}</Badge><br/>
             ¿Si necesitas reiniciar tu elección? puedes comunicarte con Jessi para darte una mano <HappyEmoji size={16} />
-          </p>
+          </div>
         )}
 
         {/* Max gifts Dialog */}
-        <AlertDialog open={isMaxGiftsDialogOpen} onOpenChange={setIsMaxGiftsDialogOpen}>
+        <AlertDialog open={showGiftLimitDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Límite de regalos alcanzado</AlertDialogTitle>
@@ -195,13 +138,13 @@ export default function GiftSelector() {
                 <LightbulbIcon className='inline-block -mt-1' size={14} /> TIP:
                 <span className='font-normal ml-1'>Puedes hacer clic en el regalo para deseleccionar.</span>
               </div>
-              <AlertDialogAction onClick={() => setIsMaxGiftsDialogOpen(false)}>¡Listo!</AlertDialogAction>
+              <AlertDialogAction onClick={() => setShowGiftLimitDialog(false)}>¡Listo!</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
         {/* Error Dialog */}
-        <AlertDialog open={wasErrorDialogOpen} onOpenChange={setWasErrorDialogOpen}>
+        <AlertDialog open={showErrorDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>¡Oops!</AlertDialogTitle>
@@ -210,13 +153,13 @@ export default function GiftSelector() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setWasErrorDialogOpen(false)}>¡Listo!</AlertDialogAction>
+              <AlertDialogAction onClick={() => setShowErrorDialog(false)}>¡Listo!</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
         {/* Success Dialog */}
-        <AlertDialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+        <AlertDialog open={showSuccessDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Perfecto <HappyEmoji /></AlertDialogTitle>
@@ -225,11 +168,13 @@ export default function GiftSelector() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setIsSuccessDialogOpen(false)}>¡Un gusto!</AlertDialogAction>
+              <AlertDialogAction onClick={() => setShowSuccessDialog(false)}>¡Un gusto!</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
     </main>
   );
-}
+};
+
+export default GiftSelector;
