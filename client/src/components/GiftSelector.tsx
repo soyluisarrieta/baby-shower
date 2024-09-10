@@ -45,17 +45,17 @@ const GiftSelector = () => {
     <main className='bg-orange-50/30'>
       {/* Header */}
       <div className='container mx-auto grid grid-cols-2 lg:grid-cols-4 [&_img]:max-h-32 [&_img]:object-top [&_img]:object-contain'>
-        <div className='px-6 grid grid-cols-3 gap-6 pointer-events-none select-none'>
+        <div className={cn('px-6 grid grid-cols-3 gap-6 pointer-events-none select-none transition-all duration-700 opacity-0 -translate-y-10', !loading && 'opacity-100 translate-y-0')}>
           <img src='./images/baby-decoration1.png' alt='Decoración 1' />
           <img src='./images/baby-decoration2.png' alt='Decoración 2' />
           <img src='./images/baby-decoration3.png' alt='Decoración 3' />
         </div>
-        <div className='lg:order-2 px-6 grid grid-cols-3 gap-6 pointer-events-none select-none'>
+        <div className={cn('lg:order-2 px-6 grid grid-cols-3 gap-6 pointer-events-none select-none transition-all duration-700 opacity-0 -translate-y-10', !loading && 'opacity-100 translate-y-0')}>
           <img src='./images/baby-decoration4.png' alt='Decoración 4' />
           <img src='./images/baby-decoration5.png' alt='Decoración 5' />
           <img src='./images/baby-decoration6.png' alt='Decoración 6' />
         </div>
-        <div className='col-span-2 p-6'>
+        <div className={cn('col-span-2 p-6 transition-opacity duration-700 opacity-0 delay-100', !loading && 'opacity-100')}>
           <h1 className="text-4xl font-bold mb-2 text-center">
             { isUserConfirmed ? 'Ya has confirmado tus regalos' : 'Selecciona hasta 3 regalos' }
           </h1>
@@ -75,7 +75,7 @@ const GiftSelector = () => {
 
       {/* Gift Selection */}
       <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5 border-2 border-dashed rounded-3xl pb-40 select-none">
+        <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5 border-2 border-dashed rounded-3xl pb-40 select-none transition-all duration-700 opacity-0 translate-y-20", !loading && 'opacity-100 translate-y-0')}>
           {gifts.map(gift => (
             <Button 
               key={gift.id}
@@ -95,8 +95,8 @@ const GiftSelector = () => {
         </div>
 
         {/* Footer Buttons */}
-        {!isUserConfirmed && (
-          <div className="w-full h-fit flex justify-center text-center fixed bottom-0 left-0">
+        <div className={cn('w-full h-fit flex justify-center text-center fixed bottom-0 left-0 transition-all duration-700 opacity-0 translate-y-full', !loading && 'opacity-100 translate-y-0')}>
+          {!isUserConfirmed && (
             <div className='w-full lg:w-fit bg-orange-200/20 backdrop-blur-sm p-5 lg:rounded-lg border lg:space-x-4 space-y-4 lg:space-y-0'>
               <Button 
                 className="w-full lg:w-auto text-white bg-blue-500 py-7 px-10 hover:bg-blue-600 active:bg-blue-800 disabled:opacity-100 disabled:grayscale" 
@@ -114,12 +114,12 @@ const GiftSelector = () => {
                 Reiniciar
               </Button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
         
         { isUserConfirmed && (
-          <div className='text-center text-sm p-6'>
-            <Badge className="mb-2">Fecha confirmada: {userTimestamp}</Badge><br/>
+          <div className={cn('text-center text-sm p-6 transition-all duration-700 opacity-0 translate-y-10', !loading && 'opacity-100 translate-y-0')}>
+            {userTimestamp && <><Badge className="mb-2">Fecha confirmada: {userTimestamp}</Badge><br/></>}
             ¿Si necesitas reiniciar tu elección? puedes comunicarte con Jessi para darte una mano <HappyEmoji size={16} />
           </div>
         )}
