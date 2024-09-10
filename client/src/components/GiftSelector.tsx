@@ -7,6 +7,16 @@ import { useGifts } from '@/hooks/useGifts';
 import { Gift } from "@/mocks/GiftList";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+const QUETIONS = [
+  {q: 'Nino o Niña?', a: 'Un increíble Varón 👶🏽'},
+  {q: '¿Qué necesita el bebé al llegar?', a: 'Mucho amor, cuidado y unos primeros pañales para comenzar la aventura 🌟'},
+  {q: '¿Cuántos meses tiene mamá?', a: 'Alrededor de 8 meses, ¡la espera está llegando a su fin! ⏳'},
+  {q: '¿Cuando nace?', a: 'Según los cálculos médicos el 14 de Octubre, pero posiblemente se adelante 😵‍💫'},
+  {q: '¿Nombre?', a: '¡Eso es una sorpresa que revelaremos pronto! 🎁'},
+  {q: '¿Peso estimado?', a: 'Alrededor de 3.5 kg, aunque puede variar un poco 📏'}
+]
 
 const GiftSelector = () => {
   const [showGiftLimitDialog, setShowGiftLimitDialog] = useState(false);
@@ -121,10 +131,24 @@ const GiftSelector = () => {
         
         { isUserConfirmed && (
           <div className={cn('text-center text-sm p-6 transition-all duration-700 opacity-0 translate-y-10', !loading && 'opacity-100 translate-y-0')}>
-            {userTimestamp && <><Badge className="mb-2">Fecha confirmada: {userTimestamp}</Badge><br/></>}
+            {userTimestamp && <><Badge className="mb-2">Confirmaste el regalo el {userTimestamp}</Badge><br/></>}
             ¿Si necesitas reiniciar tu elección? puedes comunicarte con Jessi para darte una mano <HappyEmoji size={16} />
           </div>
         )}
+
+        <div className={cn("w-full flex items-center flex-col transition-opacity opacity-0 duration-500 delay-200 pb-12", !loading && 'opacity-100')}>
+          <h2 className="text-2xl font-bold my-3">Preguntas y respuestas</h2>
+          <Accordion className="w-96" type="single" collapsible>
+              {QUETIONS.map(({q: question, a: answer}, i) => (
+                <AccordionItem key={i} value={`item-${i}`}>
+                  <AccordionTrigger>{question}</AccordionTrigger>
+                  <AccordionContent>
+                    {answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+          </Accordion>
+        </div>
 
         {/* Max gifts Dialog */}
         <AlertDialog open={showGiftLimitDialog}>
