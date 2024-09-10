@@ -9,10 +9,10 @@ class GiftController {
   // Obtiene todos los regalos
   public function getGifts($userIp) {
     // Si el user_ip ya ha confirmado su regalo
-    $checkSql = "SELECT COUNT(*) FROM users WHERE user_ip = :userIp";
+    $checkSql = "SELECT * FROM users WHERE user_ip = :userIp LIMIT 1";
     $checkStmt = $this->pdo->prepare($checkSql);
     $checkStmt->execute(['userIp' => $userIp]);
-    $exists = $checkStmt->fetchColumn();
+    $user = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
     // Si el user_ip no existe, obtiene todos los regalos
     $sql = "SELECT * FROM gifts";
@@ -26,7 +26,7 @@ class GiftController {
       'message' => 'Lista de regalos obtenidos correctamente.',
       'data' => [
         'gifts' => $gifts,
-        'user_exists' => $exists > 0
+        'timestamp' => $user['timestamp'] ?? null
       ]
     ];
   }
