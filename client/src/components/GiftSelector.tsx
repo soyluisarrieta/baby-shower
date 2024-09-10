@@ -42,7 +42,9 @@ const GiftSelector = () => {
   };
 
   return (
-    <main className='bg-orange-50/30'>
+    <main className='min-h-screen bg-gradient-to-tr from-orange-500/10 to-orange-500/5'>
+      <div className="fixed inset-0 z-50 pointer-events-none select-none opacity-70" style={{background: 'url(/images/noise.webp) 5rem'}}></div>
+      
       {/* Header */}
       <div className='container mx-auto grid grid-cols-2 lg:grid-cols-4 [&_img]:max-h-32 [&_img]:object-top [&_img]:object-contain'>
         <div className={cn('px-6 grid grid-cols-3 gap-6 pointer-events-none select-none transition-all duration-700 opacity-0 -translate-y-10', !loading && 'opacity-100 translate-y-0')}>
