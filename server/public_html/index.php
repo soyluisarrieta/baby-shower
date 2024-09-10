@@ -3,7 +3,7 @@
 require '../config.php';
 require '../middlewares/CorsConfig.php';
 require '../middlewares/RequestHandler.php';
-require '../GiftController.php';
+require '../controllers/GiftController.php';
 
 // Clase principal
 class App
