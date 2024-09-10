@@ -17,8 +17,7 @@ export const useGifts = () => {
   useEffect(() => {
     const fetchUserIp = async () => {
       try {
-        // const response = await axios.get('https://api.ipify.org?format=json');
-        const response = {data: {ip: '123123123'}};
+        const response = await axios.get('https://api.ipify.org?format=json');
         setUserIp(response.data.ip);
       } catch (err) {
         console.error('No se pudo obtener la IP del usuario', err);
