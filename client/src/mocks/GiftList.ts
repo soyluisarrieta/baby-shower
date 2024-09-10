@@ -27,6 +27,7 @@ export interface Gift {
   id: number;
   name: string;
   selected: boolean;
+  reserved: boolean;
 }
 
 export const createInitialGifts = (): Gift[] => 
@@ -34,4 +35,5 @@ export const createInitialGifts = (): Gift[] =>
     id: index + 1,
     name: gift,
     selected: false,
+    reserved: false,
   }));
