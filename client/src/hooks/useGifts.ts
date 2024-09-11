@@ -2,38 +2,42 @@ import { useState, useEffect } from 'react';
 import axios from '@/lib/axiosConfig';
 import { Gift } from '../mocks/GiftList';
 import { AxiosError } from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 const MAX_SELECTION = 3;
+const USER_HASH =  window.localStorage.getItem('USER_HASH') || window.localStorage.setItem('USER_HASH', uuidv4());
 
 export const useGifts = () => {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [selectedGifts, setSelectedGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userIp, setUserIp] = useState<string | null>(null);
+  const [user, setUser] = useState<{hash: string, ip: string} | null>(null);
   const [isUserConfirmed, setIsUserConfirmed] = useState(true);
   const [userTimestamp, setUserTimestamp] = useState(null);
-
+  
+  // Obtener y establer user IP
   useEffect(() => {
-    const fetchUserIp = async () => {
+    const fetchUser = async () => {
       try {
         const response = await axios.get('https://api.ipify.org?format=json');
-        setUserIp(response.data.ip);
+        setUser({hash: USER_HASH ?? uuidv4(), ip: response.data.ip});
       } catch (err) {
         console.error('No se pudo obtener la IP del usuario', err);
-        setUserIp(null);
+        setUser(null);
       }
     };
 
-    fetchUserIp();
+    fetchUser();
   }, []);
 
+  // Obtener los regalos del servidor
   useEffect(() => {
-    if (!userIp) return;
+    if (!user) return;
 
     const fetchGifts = async () => {
       try {
-        const response = await axios.post('/gifts', { userIp });
+        const response = await axios.post('/gifts', { user });
         const { data: { gifts: giftsFromApi, timestamp } } = response.data;
 
         if (!timestamp) {
@@ -60,8 +64,9 @@ export const useGifts = () => {
     };
 
     fetchGifts();
-  }, [userIp]);
+  }, [user]);
 
+  // Manejador para selección de los regalos
   const handleGiftSelection = (gift: Gift) => {
     if (gift.reserved) return;
 
@@ -78,12 +83,13 @@ export const useGifts = () => {
     return true;
   };
 
+  // Manejador para confirmar los regalos
   const handleConfirm = async () => {
     window.localStorage.setItem('selected_gifts', JSON.stringify(selectedGifts));
-    if (!userIp) return;
+    if (!user) return;
 
     try {
-      await axios.post('/confirm-gifts', { userIp, gifts: selectedGifts });
+      await axios.post('/confirm-gifts', { user, gifts: selectedGifts });
       setIsUserConfirmed(true);
       return true;
     } catch (err) {
