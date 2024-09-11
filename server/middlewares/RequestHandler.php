@@ -64,8 +64,8 @@ class RequestHandler
   private function getGifts()
   {
     $data = json_decode(file_get_contents('php://input'), true);
-    $userIp = $data['userIp'] ?? '';
-    $responseData = $this->controller->getGifts($userIp);
+    $user = $data['user'] ?? '';
+    $responseData = $this->controller->getGifts($user);
     $statusCode = $responseData['success'] ? 200 : 400;
     $this->response($responseData['message'], $statusCode, $responseData['data']);
   }
@@ -73,10 +73,10 @@ class RequestHandler
   private function confirmGift()
   {
     $data = json_decode(file_get_contents('php://input'), true);
-    $userIp = $data['userIp'] ?? '';
+    $user = $data['user'] ?? '';
     $gifts = $data['gifts'] ?? [];
-    if ($this->validateConfirmGift($userIp, $gifts)) {
-      $confirmedGift = $this->controller->confirmGift($userIp, $gifts);
+    if ($this->validateConfirmGift($user, $gifts)) {
+      $confirmedGift = $this->controller->confirmGift($user, $gifts);
       $statusCode = $confirmedGift['success'] ? 200 : 400;
       $this->response($confirmedGift['message'], $statusCode);
     } else {
@@ -85,9 +85,11 @@ class RequestHandler
   }
 
   // Validar los datos para confirmar un regalo
-  private function validateConfirmGift($userIp, $gifts)
+  private function validateConfirmGift($user, $gifts)
   {
-    return is_string($userIp) && is_array($gifts);
+    return is_string($user['ip']) 
+      && is_string($user['hash']) 
+      && is_array($gifts);
   }
 
   // Respuesta del servidor

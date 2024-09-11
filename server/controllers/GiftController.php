@@ -7,14 +7,14 @@ class GiftController {
   }
 
   // Obtiene todos los regalos
-  public function getGifts($userIp) {
-    // Si el user_ip ya ha confirmado su regalo
-    $checkSql = "SELECT * FROM users WHERE user_ip = :userIp LIMIT 1";
+  public function getGifts($user) {
+    // Si el user_hash ya ha confirmado su regalo
+    $checkSql = "SELECT * FROM users WHERE user_hash = :userHash LIMIT 1";
     $checkStmt = $this->pdo->prepare($checkSql);
-    $checkStmt->execute(['userIp' => $userIp]);
+    $checkStmt->execute(['userHash' => $user['hash']]);
     $user = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-    // Si el user_ip no existe, obtiene todos los regalos
+    // Si el user_hash no existe, obtiene todos los regalos
     $sql = "SELECT * FROM gifts";
     $stmt = $this->pdo->prepare($sql);
     $stmt->execute();
@@ -33,7 +33,7 @@ class GiftController {
 
 
   // Confirma un regalo
-  public function confirmGift($userIp, $gifts) {
+  public function confirmGift($user, $gifts) {
     $this->pdo->beginTransaction();
 
     try {
@@ -69,16 +69,17 @@ class GiftController {
       }
 
       // Insertar registros en la tabla "users"
-      $insertSql = "INSERT INTO users (user_ip, gift_id) VALUES (?, ?)";
+      $insertSql = "INSERT INTO users (user_ip, user_hash) VALUES (?, ?)";
       $insertStmt = $this->pdo->prepare($insertSql);
+      $insertStmt->execute([$user['ip'], $user['hash']]);
+      $lastInsertId = $this->pdo->lastInsertId();
 
       // Actualizar estado de los regalos
-      $updateSql = "UPDATE gifts SET reserved = 1 WHERE id = ?";
+      $updateSql = "UPDATE gifts SET reserved = ? WHERE id = ?";
       $updateStmt = $this->pdo->prepare($updateSql);
 
       foreach ($selectedGifts as $gift) {
-        $insertStmt->execute([$userIp, $gift['id']]);
-        $updateStmt->execute([$gift['id']]);
+        $updateStmt->execute([$lastInsertId, $gift['id']]);
       }
 
       $this->pdo->commit();
