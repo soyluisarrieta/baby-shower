@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import HappyEmoji from '@/components/HappyEmoji';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LightbulbIcon } from 'lucide-react';
 import { useGifts } from '@/hooks/useGifts';
 import { Gift } from "@/mocks/GiftList";
@@ -10,18 +10,21 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const QUETIONS = [
-  {q: 'Nino o Niña?', a: 'Un increíble Varón 👶🏽'},
+  {q: '¿Niño o Niña?', a: 'Es un hermoso y bello Niño 👶🏽'},
   {q: '¿Qué necesita el bebé al llegar?', a: 'Mucho amor, cuidado y unos primeros pañales para comenzar la aventura 🌟'},
   {q: '¿Cuántos meses tiene mamá?', a: 'Alrededor de 8 meses, ¡la espera está llegando a su fin! ⏳'},
   {q: '¿Cuando nace?', a: 'Según los cálculos médicos el 14 de Octubre, pero posiblemente se adelante 😵‍💫'},
-  {q: '¿Nombre?', a: '¡Eso es una sorpresa que revelaremos pronto! 🎁'},
-  {q: '¿Peso estimado?', a: 'Alrededor de 3.5 kg, aunque puede variar un poco 📏'}
+  {q: '¿Peso estimado?', a: 'Alrededor de 3.5 kg, aunque puede variar un poco 📏'},
+  {q: '¿Donde va a nacer?', a: 'Aunque nos gustaría un parto en casa, nacerá en un hospital 🏥'},
+  {q: '¿Por qué Sebastián?', a: 'Emprendimos como "Paylus Estudio", una combinación de los nombres Paola y Luis. Optamos por usar el plural con la idea de que, si algún día tuviéramos un hijo o una hija, lo llamaríamos con esta inicial. Sebastián, nombre asociado con respeto y honor 🤗'},
+  {q: '¿Y Camilo como segundo nombre?', a: 'Es el nombre de nuestro artista Colombiano favorito (y también porque combina de maravilla). Camilo, nombre que hace referencia a un hombre noble. 😌'},
 ]
 
 const GiftSelector = () => {
   const [showGiftLimitDialog, setShowGiftLimitDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
   
   const {
     gifts,
@@ -52,8 +55,8 @@ const GiftSelector = () => {
   };
 
   return (
-    <main className='min-h-screen bg-gradient-to-tr from-orange-500/10 to-orange-500/5'>
-      <div className="fixed inset-0 z-50 pointer-events-none select-none opacity-70" style={{background: 'url(/images/noise.webp) 5rem'}}></div>
+    <main className='min-h-screen bg-gradient-to-tr from-orange-500/10 to-orange-500/5 relative'>
+      <div className="absolute w-full h-full z-50 pointer-events-none select-none contrast-200 opacity-70" style={{background: 'url(/images/noise.webp)'}}></div>
       
       {/* Header */}
       <div className='container mx-auto grid grid-cols-2 lg:grid-cols-4 [&_img]:max-h-32 [&_img]:object-top [&_img]:object-contain'>
@@ -87,7 +90,7 @@ const GiftSelector = () => {
 
       {/* Gift Selection */}
       <div className="container mx-auto p-6">
-        <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5 border-2 border-dashed rounded-3xl pb-40 select-none transition-all duration-700 opacity-0 translate-y-20", !loading && 'opacity-100 translate-y-0')}>
+        <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-5 border-2 border-dashed rounded-3xl select-none transition-all duration-700 opacity-0 translate-y-20", !loading && 'opacity-100 translate-y-0')}>
           {gifts.map(gift => (
             <Button 
               key={gift.id}
@@ -95,7 +98,7 @@ const GiftSelector = () => {
                 'h-auto whitespace-normal inline-block p-7 text-md hover:scale-[1.02] transition disabled:opacity-100', 
                 gift.reserved && 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed pointer-events-none disabled:opacity-50',
                 gift.selected ? 'bg-green-300 text-green-700 border-green-400 hover:bg-green-300 hover:text-green-700 hover:border-green-400 disabled:opacity-100' : 
-                'bg-white text-gray-700 border-border hover:bg-green-100 hover:border-green-500 hover:text-green-500'
+                'bg-white text-gray-700 border-border hover:bg-white lg:hover:bg-green-100 lg:hover:border-green-500 lg:hover:text-green-500'
               )}
               variant='outline'
               onClick={() => !isUserConfirmed && handleGiftClick(gift)}
@@ -109,11 +112,11 @@ const GiftSelector = () => {
         {/* Footer Buttons */}
         <div className={cn('w-full h-fit flex justify-center text-center fixed bottom-0 left-0 transition-all duration-700 opacity-0 translate-y-full', !loading && 'opacity-100 translate-y-0')}>
           {!isUserConfirmed && (
-            <div className='w-full lg:w-fit bg-orange-200/20 backdrop-blur-sm p-5 lg:rounded-lg border lg:space-x-4 space-y-4 lg:space-y-0'>
+            <div className='w-full lg:w-fit bg-orange-500/20 backdrop-blur-sm p-5 lg:rounded-lg border lg:space-x-4 space-y-4 lg:space-y-0'>
               <Button 
                 className="w-full lg:w-auto text-white bg-blue-500 py-7 px-10 hover:bg-blue-600 active:bg-blue-800 disabled:opacity-100 disabled:grayscale" 
                 disabled={!selectedGifts.length}
-                onClick={handleConfirmClick}
+                onClick={() => setShowWarningDialog(true)}
               >
                 Confirmar ({selectedGifts.length})
               </Button>
@@ -136,9 +139,9 @@ const GiftSelector = () => {
           </div>
         )}
 
-        <div className={cn("w-full flex items-center flex-col transition-opacity opacity-0 duration-500 delay-200 pb-12", !loading && 'opacity-100')}>
+        <div className={cn("w-full flex items-center flex-col transition-opacity opacity-0 duration-500 delay-200 pt-10 pb-52", !loading && 'opacity-100')}>
           <h2 className="text-2xl font-bold my-3">Preguntas y respuestas</h2>
-          <Accordion className="w-96" type="single" collapsible>
+          <Accordion className="max-w-xl w-full" type="single" collapsible>
               {QUETIONS.map(({q: question, a: answer}, i) => (
                 <AccordionItem key={i} value={`item-${i}`}>
                   <AccordionTrigger>{question}</AccordionTrigger>
@@ -180,6 +183,24 @@ const GiftSelector = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogAction onClick={() => setShowErrorDialog(false)}>¡Listo!</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Warning Dialog */}
+        <AlertDialog open={showWarningDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Última palabra?</AlertDialogTitle>
+              <AlertDialogDescription className='mb-3'>
+                Una vez confirmes los regalos, quedarán reservados por ti y no podrás cambiar tu elección.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowWarningDialog(false)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => {handleConfirmClick(); setShowWarningDialog(false)}}>
+                ¡Confirmar!
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
