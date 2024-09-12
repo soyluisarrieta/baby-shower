@@ -56,6 +56,7 @@ class RequestHandler
     $currentUrlPath = str_replace($documentRootUrl, '', $currentFilePathUrl);
     $currentUrlPath = dirname($currentUrlPath);
     $routePath = str_replace($currentUrlPath, '', $requestUri);
+    $routePath = '/' . ltrim($routePath, '/');
 
     return $routePath ?? '/';
   }
