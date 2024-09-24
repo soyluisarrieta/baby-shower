@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '@/lib/axiosConfig';
 import { Gift } from '../mocks/GiftList';
-import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 const MAX_SELECTION = 3;
@@ -11,7 +10,6 @@ export const useGifts = () => {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [selectedGifts, setSelectedGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<{hash: string, ip: string} | null>(null);
   const [isUserConfirmed, setIsUserConfirmed] = useState(true);
   const [userTimestamp, setUserTimestamp] = useState(null);
@@ -56,7 +54,6 @@ export const useGifts = () => {
         setGifts(updatedGifts);
         setSelectedGifts(savedSelections);
       } catch (err) {
-        setError('No se pudieron recuperar los regalos');
         console.error(err);
       } finally {
         setLoading(false);
@@ -82,42 +79,12 @@ export const useGifts = () => {
     setGifts(gifts.map(g => g.id === gift.id ? { ...g, selected: !g.selected } : g));
     return true;
   };
-
-  // Manejador para confirmar los regalos
-  const handleConfirm = async () => {
-    window.localStorage.setItem('selected_gifts', JSON.stringify(selectedGifts));
-    if (!user) return;
-
-    try {
-      await axios.post('/confirm-gifts', { user, gifts: selectedGifts });
-      setIsUserConfirmed(true);
-      return true;
-    } catch (err) {
-      const errMsg = err instanceof AxiosError
-        ? err.response?.data?.message
-        : 'No se pudieron confirmar los regalos'
-      setError(errMsg);
-      console.error(err);
-      return false;
-    }
-  };
-
-  // Reiniciar selección
-  const handleReset = () => {
-    setSelectedGifts([]);
-    setGifts(gifts.map(g => ({ ...g, selected: false })));
-    window.localStorage.removeItem(`selected_gifts`);
-  };
-
+  
   return {
     gifts,
-    selectedGifts,
     loading,
-    error,
     isUserConfirmed,
     userTimestamp,
     handleGiftSelection,
-    handleConfirm,
-    handleReset
   };
 };
